@@ -1,6 +1,5 @@
 package com.braintreepayments.api.dropin;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
@@ -123,7 +122,6 @@ public class CustomizationTest extends BraintreePaymentActivityTestCase {
         onView(withId(R.id.bt_card_form_submit_button)).check(matches(withText("$19 - PURCHASE")));
     }
 
-    @TargetApi(VERSION_CODES.HONEYCOMB)
     public void testActionBarTitleAndLogoAreUsedIfIncludedAsAnExtra() {
         Intent intent = createIntent();
         Customization customization = new CustomizationBuilder()
@@ -145,7 +143,6 @@ public class CustomizationTest extends BraintreePaymentActivityTestCase {
         }
     }
 
-    @TargetApi(VERSION_CODES.HONEYCOMB)
     public void testDefaultActionBarTitleAndLogoAreUsedWhenCustomizationIsPresentWithoutSpecifyingTitleAndLogo() {
         Intent intent = createIntent();
         Customization customization = new CustomizationBuilder()
