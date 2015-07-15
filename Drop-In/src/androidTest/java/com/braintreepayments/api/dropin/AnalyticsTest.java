@@ -10,6 +10,8 @@ import com.braintreepayments.api.exceptions.DownForMaintenanceException;
 import com.braintreepayments.api.exceptions.ServerException;
 import com.braintreepayments.testutils.TestClientTokenBuilder;
 
+import org.json.JSONException;
+
 import java.util.Map;
 
 import static android.support.test.espresso.Espresso.onView;
@@ -45,18 +47,18 @@ public class AnalyticsTest extends BraintreePaymentActivityTestCase {
         System.setProperty("dexmaker.dexcache", mContext.getCacheDir().getPath());
     }
 
-    public void testAddsEventOnSDKInitialized() {
+    public void testAddsEventOnSDKInitialized() throws JSONException {
         setupActivity();
         verify(mBraintree, times(1)).sendAnalyticsEvent("sdk.initialized");
     }
 
-    public void testAddsEventOnAddCardStarted() {
+    public void testAddsEventOnAddCardStarted() throws JSONException {
         setupActivity();
         onView(withId(R.id.bt_card_form_header)).check(matches(isDisplayed()));
         verify(mBraintree, times(1)).sendAnalyticsEvent("add-card.start");
     }
 
-    public void testAddsEventOnAddCardSucceeded() {
+    public void testAddsEventOnAddCardSucceeded() throws JSONException {
         setupActivity();
         fillInCreditCard();
         waitForActivityToFinish(mActivity);
@@ -64,7 +66,7 @@ public class AnalyticsTest extends BraintreePaymentActivityTestCase {
         verify(mBraintree, times(1)).sendAnalyticsEvent("add-card.success");
     }
 
-    public void testAddsEventOnAddCardFailed() {
+    public void testAddsEventOnAddCardFailed() throws JSONException {
         String clientToken = new TestClientTokenBuilder().withCvvVerification().withAnalytics().build();
         mBraintree = spy(injectBraintree(mContext, clientToken, clientToken));
         injectBraintree(clientToken, mBraintree);
@@ -84,7 +86,7 @@ public class AnalyticsTest extends BraintreePaymentActivityTestCase {
         verify(mBraintree, times(1)).sendAnalyticsEvent("add-card.failed");
     }
 
-    public void testAddsEventOnAddPayPalStarted() {
+    public void testAddsEventOnAddPayPalStarted() throws JSONException {
         setupActivity();
         onView(withId(R.id.bt_paypal_button)).perform(click());
         waitForView(withHint("Email"));
@@ -93,14 +95,14 @@ public class AnalyticsTest extends BraintreePaymentActivityTestCase {
         verify(mBraintree, times(1)).sendAnalyticsEvent("add-paypal.start");
     }
 
-    public void testAddsEventOnAddPayPalSucceeded() {
+    public void testAddsEventOnAddPayPalSucceeded() throws JSONException {
         setupActivity();
         performPayPalAdd();
 
         verify(mBraintree, times(1)).sendAnalyticsEvent("add-paypal.success");
     }
 
-    public void testAddsEventOnSDKExitWithSuccess() {
+    public void testAddsEventOnSDKExitWithSuccess() throws JSONException {
         setupActivity();
         fillInCreditCard();
         waitForActivityToFinish(mActivity);
@@ -108,7 +110,7 @@ public class AnalyticsTest extends BraintreePaymentActivityTestCase {
         verify(mBraintree, times(1)).sendAnalyticsEvent("sdk.exit.success");
     }
 
-    public void testAddsEventOnSDKExitWithUserCanceled() {
+    public void testAddsEventOnSDKExitWithUserCanceled() throws JSONException {
         setupActivity();
         sendKeys(KeyEvent.KEYCODE_BACK);
         waitForActivityToFinish(mActivity);
@@ -116,7 +118,7 @@ public class AnalyticsTest extends BraintreePaymentActivityTestCase {
         verify(mBraintree, times(1)).sendAnalyticsEvent("sdk.exit.user-canceled");
     }
 
-    public void testDoesntCrashWhenUserExitsRightAfterDropInIsLaunched() {
+    public void testDoesntCrashWhenUserExitsRightAfterDropInIsLaunched() throws JSONException {
         String clientToken = new TestClientTokenBuilder().withAnalytics().build();
         injectSlowNonSetupBraintree(mContext, clientToken, 5000);
         setClientTokenExtraForTest(this, clientToken);
@@ -130,7 +132,7 @@ public class AnalyticsTest extends BraintreePaymentActivityTestCase {
         assertEquals(Activity.RESULT_CANCELED, result.get("resultCode"));
     }
 
-    public void testAddsEventOnSDKExitWithDeveloperError() {
+    public void testAddsEventOnSDKExitWithDeveloperError() throws JSONException {
         setupActivity();
         BraintreeTestUtils
                 .postUnrecoverableErrorFromBraintree(mBraintree, new AuthenticationException());
@@ -139,7 +141,7 @@ public class AnalyticsTest extends BraintreePaymentActivityTestCase {
         verify(mBraintree, times(1)).sendAnalyticsEvent("sdk.exit.developer-error");
     }
 
-    public void testAddsEventOnSDKExitWithServerError() {
+    public void testAddsEventOnSDKExitWithServerError() throws JSONException {
         setupActivity();
         BraintreeTestUtils.postUnrecoverableErrorFromBraintree(mBraintree, new ServerException());
         waitForActivityToFinish(mActivity);
@@ -147,7 +149,7 @@ public class AnalyticsTest extends BraintreePaymentActivityTestCase {
         verify(mBraintree, times(1)).sendAnalyticsEvent("sdk.exit.server-error");
     }
 
-    public void testAddsEventOnSDKExitWithServerUnavailableError() {
+    public void testAddsEventOnSDKExitWithServerUnavailableError() throws JSONException {
         setupActivity();
         BraintreeTestUtils
                 .postUnrecoverableErrorFromBraintree(mBraintree, new DownForMaintenanceException());
@@ -157,7 +159,7 @@ public class AnalyticsTest extends BraintreePaymentActivityTestCase {
     }
 
     /* helpers */
-    private void setupActivity() {
+    private void setupActivity() throws JSONException {
         String clientToken = new TestClientTokenBuilder().withFakePayPal().withAnalytics().build();
         mBraintree = spy(injectBraintree(mContext, clientToken, clientToken));
         injectBraintree(clientToken, mBraintree);

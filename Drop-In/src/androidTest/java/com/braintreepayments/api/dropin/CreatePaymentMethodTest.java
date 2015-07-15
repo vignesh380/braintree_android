@@ -19,8 +19,11 @@ import com.braintreepayments.api.models.CardBuilder;
 import com.braintreepayments.api.models.ClientToken;
 import com.braintreepayments.api.models.Configuration;
 import com.braintreepayments.api.models.PaymentMethod;
+import com.braintreepayments.api.models.PaymentMethodBuilder;
 import com.braintreepayments.cardform.view.ErrorEditText;
 import com.braintreepayments.testutils.TestClientTokenBuilder;
+
+import org.json.JSONException;
 
 import java.util.Map;
 
@@ -65,19 +68,21 @@ import static org.mockito.Mockito.spy;
 
 public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
 
-    public void testCardFormCreatesAPaymentMethodWithoutACustomer() throws InterruptedException {
+    public void testCardFormCreatesAPaymentMethodWithoutACustomer()
+            throws InterruptedException, JSONException {
         setUpActivityTest(this, new TestClientTokenBuilder().withoutCustomer().build());
 
         addCardAndAssertSuccess(getActivity());
     }
 
-    public void testCardFormCreatesAPaymentMethodWithACustomer() throws InterruptedException {
+    public void testCardFormCreatesAPaymentMethodWithACustomer()
+            throws InterruptedException, JSONException {
         setUpActivityTest(this, new TestClientTokenBuilder().build());
 
         addCardAndAssertSuccess(getActivity());
     }
 
-    public void testCardFormCreatesAPaymentMethodWithoutCvvOrPostalCode() {
+    public void testCardFormCreatesAPaymentMethodWithoutCvvOrPostalCode() throws JSONException {
         String clientToken = new TestClientTokenBuilder()
                 .withoutCvvChallenge()
                 .withoutPostalCodeChallenge()
@@ -105,7 +110,7 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
     }
 
     public void testCreatesAPaymentMethodUsingConfigurationEndpoint()
-            throws ErrorWithResponse, BraintreeException {
+            throws ErrorWithResponse, BraintreeException, JSONException {
         String clientToken = new TestClientTokenBuilder().build();
         BraintreeApi braintreeApi = spy(getNotSetupBraintreeApi(mContext, clientToken));
         injectBraintree(clientToken, braintreeApi);
@@ -129,18 +134,19 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
         verifySetupCalledOnBraintreeApi(braintreeApi);
     }
 
-    public void testPayPalCreatesAPaymentMethodWithACustomer() {
+    public void testPayPalCreatesAPaymentMethodWithACustomer() throws JSONException {
         setUpActivityTest(this, new TestClientTokenBuilder().withPayPal().build());
         assertCreatePaymentMethodFromPayPal("jane.doe@example.com");
     }
 
-    public void testPayPalCreatesAPaymentMethodWithoutACustomer() {
+    public void testPayPalCreatesAPaymentMethodWithoutACustomer() throws JSONException {
         setUpActivityTest(this,
                 new TestClientTokenBuilder().withoutCustomer().withPayPal().build());
-        assertCreatePaymentMethodFromPayPal("bt_buyer_us@paypal.com");
+        assertCreatePaymentMethodFromPayPal("jane.doe@example.com");
     }
 
-    public void testReturnsToSelectPaymentMethodViewAfterAddingAPayPalAccount() {
+    public void testReturnsToSelectPaymentMethodViewAfterAddingAPayPalAccount()
+            throws JSONException {
         setUpActivityTest(this, new TestClientTokenBuilder().withFakePayPal().build());
         getActivity();
 
@@ -150,7 +156,7 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
         assertSelectedPaymentMethodIs(R.string.bt_descriptor_paypal);
     }
 
-    public void testDisplaysLoadingViewWhileCreatingAPayPalAccount() {
+    public void testDisplaysLoadingViewWhileCreatingAPayPalAccount() throws JSONException {
         String clientToken = new TestClientTokenBuilder().withFakePayPal().build();
         injectSlowBraintree(mContext, clientToken, THREE_SECONDS);
         setUpActivityTest(this, clientToken);
@@ -163,7 +169,7 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
         waitForPaymentMethodList().check(matches(isDisplayed()));
     }
 
-    public void testDisablesSubmitButtonWhileCreatingPaymentMethod() {
+    public void testDisablesSubmitButtonWhileCreatingPaymentMethod() throws JSONException {
         String clientToken = new TestClientTokenBuilder().build();
         injectSlowBraintree(mContext, clientToken, 200);
         setUpActivityTest(this, clientToken);
@@ -193,7 +199,8 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
         assertEquals("11", ((Card) response).getLastTwo());
     }
 
-    public void testReEnablesSubmitButtonIfThereAreValidationErrorsForThePaymentMethod() {
+    public void testReEnablesSubmitButtonIfThereAreValidationErrorsForThePaymentMethod()
+            throws JSONException {
         String clientToken = new TestClientTokenBuilder()
                 .withoutPostalCodeChallenge()
                 .withCvvVerification()
@@ -215,11 +222,11 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
     }
 
     public void testFinishesActivityWithErrorIfANonCreditCardErrorIsReturned()
-            throws ErrorWithResponse, BraintreeException {
+            throws ErrorWithResponse, BraintreeException, JSONException {
         String clientToken = new TestClientTokenBuilder().withFakePayPal().build();
         BraintreeApi braintreeApi = spy(new BraintreeApi(mContext, clientToken));
         doThrow(new ErrorWithResponse(422, "{}")).when(braintreeApi)
-                .create(any(PaymentMethod.Builder.class));
+                .create(any(PaymentMethodBuilder.class));
         injectBraintree(clientToken, braintreeApi);
         setClientTokenExtraForTest(this, clientToken);
         Activity activity = getActivity();
@@ -235,7 +242,7 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
         assertEquals("Parsing error response failed", error.getMessage());
     }
 
-    public void testPayPalButtonIsNotShownIfPayPalIsNotSupported() {
+    public void testPayPalButtonIsNotShownIfPayPalIsNotSupported() throws JSONException {
         setUpActivityTest(this, new TestClientTokenBuilder().build());
         getActivity();
 
@@ -266,7 +273,7 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
         waitForAddPaymentFormHeader().check(matches(isDisplayed()));
     }
 
-    public void testBackButtonDuringCreditCardAddDoesNothing() {
+    public void testBackButtonDuringCreditCardAddDoesNothing() throws JSONException {
         String clientToken = new TestClientTokenBuilder().build();
         injectSlowBraintree(mContext, clientToken, TWO_SECONDS);
         setClientTokenExtraForTest(this, clientToken);
@@ -284,7 +291,7 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
         onView(withId(R.id.bt_header_container)).check(matches(isDisplayed()));
     }
 
-    public void testBackButtonDuringPayPalAddDoesNothing() {
+    public void testBackButtonDuringPayPalAddDoesNothing() throws JSONException {
         String clientToken = new TestClientTokenBuilder().withFakePayPal().build();
         injectSlowBraintree(mContext, clientToken, TWO_SECONDS);
         setClientTokenExtraForTest(this, clientToken);
@@ -306,7 +313,7 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
         assertFalse("Expected up not to be present on action bar", checkHomeAsUpEnabled(activity));
     }
 
-    public void testUpButtonIsShownAfterYouAddAPaymentMethod() {
+    public void testUpButtonIsShownAfterYouAddAPaymentMethod() throws JSONException {
         setUpActivityTest(this, new TestClientTokenBuilder().withFakePayPal().build());
         BraintreePaymentActivity activity = getActivity();
 
@@ -319,11 +326,11 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
     }
 
     public void testDisplaysAnErrorWhenCardNumberFailsOnServer()
-            throws BraintreeException, ErrorWithResponse {
+            throws BraintreeException, ErrorWithResponse, JSONException {
         String clientToken = new TestClientTokenBuilder().build();
         BraintreeApi braintreeApi = spy(new BraintreeApi(mContext, clientToken));
         doThrow(new ErrorWithResponse(422, stringFromFixture(mContext, "errors/card_number_error_response.json")))
-                .when(braintreeApi).create(any(PaymentMethod.Builder.class));
+                .when(braintreeApi).create(any(PaymentMethodBuilder.class));
         injectBraintree(clientToken, braintreeApi);
         setClientTokenExtraForTest(this, clientToken);
         BraintreePaymentActivity activity = getActivity();
@@ -343,7 +350,7 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
     }
 
     public void testDisplaysAnErrorWhenExpirationFailsOnServer()
-            throws ErrorWithResponse, BraintreeException {
+            throws ErrorWithResponse, BraintreeException, JSONException {
         String clientToken = new TestClientTokenBuilder()
                 .withoutCvvChallenge()
                 .withoutPostalCodeChallenge()
@@ -371,7 +378,7 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
         onView(withId(R.id.bt_header_container)).check(matches(isDisplayed()));
     }
 
-    public void testDisplaysAnErrorWhenPostalCodeFailsOnServer() {
+    public void testDisplaysAnErrorWhenPostalCodeFailsOnServer() throws JSONException {
         setUpActivityTest(this,
                 new TestClientTokenBuilder().withPostalCodeVerification().build());
         BraintreePaymentActivity activity = getActivity();
@@ -393,7 +400,8 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
         onView(withId(R.id.bt_header_container)).check(matches(isDisplayed()));
     }
 
-    public void testReturnsUnexpectedErrorWhenServerReturnsNonCreditCardError() {
+    public void testReturnsUnexpectedErrorWhenServerReturnsNonCreditCardError()
+            throws JSONException {
         String clientTokenString = new TestClientTokenBuilder().build();
         ClientToken clientToken = ClientToken.fromString(clientTokenString);
         Configuration configuration = Configuration.fromJson(clientTokenString);
@@ -402,7 +410,7 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
             public HttpResponse post(String url, String params)
                     throws ErrorWithResponse, BraintreeException {
                 if(url.contains("credit_cards")) {
-                    return new HttpResponse(422, stringFromFixture(mContext, "error_response.json"));
+                    throw new ErrorWithResponse(422, stringFromFixture(mContext, "error_response.json"));
                 } else {
                     return super.post(url, params);
                 }
@@ -426,7 +434,8 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
                 result.get("resultCode"));
     }
 
-    public void testErrorIsShownWhenCvvDoesNotMatchForCvvVerificationMerchants() {
+    public void testErrorIsShownWhenCvvDoesNotMatchForCvvVerificationMerchants()
+            throws JSONException {
         setUpActivityTest(this, new TestClientTokenBuilder().withCvvVerification().build());
 
         BraintreePaymentActivity activity = getActivity();
@@ -449,7 +458,8 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
         onView(withId(R.id.bt_header_container)).check(matches(isDisplayed()));
     }
 
-    public void testErrorIsShownWhenPostalCodeDoesNotMatchForPostalCodeVerificationMerchants() {
+    public void testErrorIsShownWhenPostalCodeDoesNotMatchForPostalCodeVerificationMerchants()
+            throws JSONException {
         setUpActivityTest(this,
                 new TestClientTokenBuilder().withPostalCodeVerification().build());
 
@@ -473,7 +483,8 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
         onView(withId(R.id.bt_header_container)).check(matches(isDisplayed()));
     }
 
-    public void testErrorIsShownWhenCvvAndPostalCodeDoesNotMatchForCvvAndPostalCodeVerificationMerchants() {
+    public void testErrorIsShownWhenCvvAndPostalCodeDoesNotMatchForCvvAndPostalCodeVerificationMerchants()
+            throws JSONException {
         setUpActivityTest(this,
                 new TestClientTokenBuilder().withCvvAndPostalCodeVerification().build());
 
@@ -501,7 +512,7 @@ public class CreatePaymentMethodTest extends BraintreePaymentActivityTestCase {
     }
 
     public void testIsSuccessfulWhenCvvAndPostalCodeMatchForCvvAndPostalCodeVerificationMerchants()
-            throws InterruptedException {
+            throws InterruptedException, JSONException {
         setUpActivityTest(this,
                 new TestClientTokenBuilder().withCvvAndPostalCodeVerification().build());
 

@@ -27,7 +27,6 @@ import com.braintreepayments.test.TestListenerActivity;
 import com.braintreepayments.testutils.TestClientTokenBuilder;
 import com.google.android.gms.wallet.Cart;
 import com.google.android.gms.wallet.WalletConstants;
-import com.google.gson.JsonSyntaxException;
 import com.paypal.android.sdk.payments.PayPalFuturePaymentActivity;
 import com.paypal.android.sdk.payments.PayPalProfileSharingActivity;
 
@@ -98,7 +97,8 @@ public class BraintreeTest extends AndroidTestCase {
     }
 
     public void testSetupReturnsAnError()
-            throws ExecutionException, InterruptedException, ErrorWithResponse, BraintreeException {
+            throws ExecutionException, InterruptedException, ErrorWithResponse, BraintreeException,
+            JSONException {
         final AtomicBoolean wasCalled = new AtomicBoolean(false);
         BraintreeSetupFinishedListener setupFinishedListener = new BraintreeSetupFinishedListener() {
             @Override
@@ -132,8 +132,8 @@ public class BraintreeTest extends AndroidTestCase {
                     String errorMessage, Exception exception) {
                 assertFalse(setupSuccessful);
                 assertNull(braintree);
-                assertEquals("java.lang.IllegalStateException: Expected BEGIN_OBJECT but was STRING at line 1 column 1 path $", errorMessage);
-                assertTrue(exception instanceof JsonSyntaxException);
+                assertEquals("Value not-json! of type java.lang.String cannot be converted to JSONObject", errorMessage);
+                assertTrue(exception instanceof JSONException);
                 wasCalled.set(true);
             }
         };
@@ -486,7 +486,7 @@ public class BraintreeTest extends AndroidTestCase {
     }
 
     public void testStartThreeDSecureVerificationPostsPaymentMethodToListenersWhenLookupReturnsACard()
-            throws InterruptedException, ErrorWithResponse, BraintreeException {
+            throws InterruptedException, ErrorWithResponse, BraintreeException, JSONException {
         String clientToken = new TestClientTokenBuilder().withThreeDSecure().build();
         BraintreeApi braintreeApi = new BraintreeApi(getContext(), clientToken);
         Braintree braintree = new Braintree(clientToken, braintreeApi);
@@ -520,7 +520,8 @@ public class BraintreeTest extends AndroidTestCase {
         assertTrue(paymentMethodCreatedCalled.get());
     }
 
-    public void testStartThreeDSecureVerificationAcceptsACardBuilderAndPostsAPaymentMethodToListener() {
+    public void testStartThreeDSecureVerificationAcceptsACardBuilderAndPostsAPaymentMethodToListener()
+            throws JSONException {
         String clientToken = new TestClientTokenBuilder().withThreeDSecure().build();
         BraintreeApi braintreeApi = new BraintreeApi(getContext(), clientToken);
         Braintree braintree = new Braintree(clientToken, braintreeApi);
@@ -639,12 +640,11 @@ public class BraintreeTest extends AndroidTestCase {
         };
         mBraintree.addListener(listener);
 
-        JSONObject response =
-                new JSONObject(stringFromFixture(mContext, "errors/three_d_secure_error.json"));
+        String response = stringFromFixture(mContext, "errors/three_d_secure_error.json");
 
         Intent data = new Intent()
                 .putExtra(ThreeDSecureWebViewActivity.EXTRA_THREE_D_SECURE_RESULT,
-                        ThreeDSecureAuthenticationResponse.fromJson(response.toString()));
+                        ThreeDSecureAuthenticationResponse.fromJson(response));
 
         mBraintree.finishThreeDSecureVerification(Activity.RESULT_OK, data);
 
@@ -803,7 +803,7 @@ public class BraintreeTest extends AndroidTestCase {
         waitForMainThreadToFinish();
     }
 
-    public void testSameBraintreeIsRetrievedForIdenticalClientTokens() {
+    public void testSameBraintreeIsRetrievedForIdenticalClientTokens() throws JSONException {
         String clientToken = new TestClientTokenBuilder().build();
 
         Braintree b1 = Braintree.getInstance(getContext(), clientToken);
@@ -812,7 +812,8 @@ public class BraintreeTest extends AndroidTestCase {
         assertTrue(b1 == b2);
     }
 
-    public void testCanAddMultipleListeners() throws ExecutionException, InterruptedException {
+    public void testCanAddMultipleListeners()
+            throws ExecutionException, InterruptedException, JSONException {
         String clientToken = new TestClientTokenBuilder().build();
         Braintree braintree = Braintree.getInstance(getContext(), clientToken);
 
@@ -839,7 +840,8 @@ public class BraintreeTest extends AndroidTestCase {
         assertTrue(wasSecondListenerCalled.get());
     }
 
-    public void testCanLockAndUnlockListeners() throws ExecutionException, InterruptedException {
+    public void testCanLockAndUnlockListeners()
+            throws ExecutionException, InterruptedException, JSONException {
         String clientToken = new TestClientTokenBuilder().build();
         Braintree braintree = Braintree.getInstance(getContext(), clientToken);
 
@@ -867,7 +869,7 @@ public class BraintreeTest extends AndroidTestCase {
     }
 
     public void testCanSwitchOutListenerDuringLockedPhaseAndOnlySecondListenerIsExecuted()
-            throws ExecutionException, InterruptedException {
+            throws ExecutionException, InterruptedException, JSONException {
         String clientToken = new TestClientTokenBuilder().build();
         Braintree braintree = Braintree.getInstance(getContext(), clientToken);
 
@@ -1048,8 +1050,9 @@ public class BraintreeTest extends AndroidTestCase {
     public void testReturnsANewBraintreeInstanceIfThereIsNoExistingInstance() {
         Braintree.reset();
         Bundle bundle = new Bundle();
-        bundle.putString("com.braintreepayments.api.KEY_CLIENT_TOKEN", "{}");
-        bundle.putString("com.braintreepayments.api.KEY_CONFIGURATION", "{}");
+        String clientToken = new TestClientTokenBuilder().build();
+        bundle.putString("com.braintreepayments.api.KEY_CLIENT_TOKEN", clientToken);
+        bundle.putString("com.braintreepayments.api.KEY_CONFIGURATION", clientToken);
 
         assertTrue(Braintree.sInstances.size() == 0);
         Braintree braintree = Braintree.restoreSavedInstanceState(mContext, bundle);

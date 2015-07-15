@@ -6,6 +6,8 @@ import android.os.Bundle;
 
 import com.braintreepayments.api.Braintree;
 
+import org.json.JSONException;
+
 public class ThreeDSecureAuthenticationTestActivity extends Activity {
 
     public static final String EXTRA_CLIENT_TOKEN = "client_token";
@@ -18,12 +20,15 @@ public class ThreeDSecureAuthenticationTestActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Braintree braintree = Braintree.getInstance(this,
-                getIntent().getStringExtra(EXTRA_CLIENT_TOKEN));
-        String nonce = getIntent().getStringExtra(EXTRA_NONCE);
-        String amount = getIntent().getStringExtra(EXTRA_AMOUNT);
+        try {
+            Braintree braintree = Braintree.getInstance(this,
+                    getIntent().getStringExtra(EXTRA_CLIENT_TOKEN));
 
-        braintree.startThreeDSecureVerification(this, THREE_D_SECURE_REQUEST, nonce, amount);
+            String nonce = getIntent().getStringExtra(EXTRA_NONCE);
+            String amount = getIntent().getStringExtra(EXTRA_AMOUNT);
+
+            braintree.startThreeDSecureVerification(this, THREE_D_SECURE_REQUEST, nonce, amount);
+        } catch (JSONException ignored) {}
     }
 
     @Override
@@ -34,5 +39,4 @@ public class ThreeDSecureAuthenticationTestActivity extends Activity {
             finish();
         }
     }
-
 }
