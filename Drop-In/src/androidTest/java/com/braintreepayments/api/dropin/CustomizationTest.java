@@ -7,7 +7,6 @@ import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.widget.ImageView;
 
-import com.braintreepayments.api.BraintreeApi;
 import com.braintreepayments.api.dropin.Customization.CustomizationBuilder;
 import com.braintreepayments.api.exceptions.BraintreeException;
 import com.braintreepayments.api.exceptions.ErrorWithResponse;
@@ -20,6 +19,8 @@ import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.assertion.ViewAssertions.matches;
 import static android.support.test.espresso.matcher.ViewMatchers.isDisplayed;
 import static android.support.test.espresso.matcher.ViewMatchers.withText;
+import static com.braintreepayments.api.DropInTestUtils.create;
+import static com.braintreepayments.api.TestDependencyInjector.injectBraintree;
 import static com.braintreepayments.api.utils.PaymentFormHelpers.waitForAddPaymentFormHeader;
 import static com.braintreepayments.api.utils.PaymentFormHelpers.waitForPaymentMethodList;
 import static com.braintreepayments.testutils.CardNumber.VISA;
@@ -68,10 +69,9 @@ public class CustomizationTest extends BraintreePaymentActivityTestCase {
     }
 
     public void testSubmitButtonUsesCustomizationForSelectPaymentMethodIfIncludedAsAnExtra()
-            throws ErrorWithResponse, BraintreeException, JSONException {
+            throws ErrorWithResponse, BraintreeException, JSONException, InterruptedException {
         String clientToken = new TestClientTokenBuilder().build();
-        BraintreeApi api = new BraintreeApi(mContext, clientToken);
-        api.create(new CardBuilder()
+        create(injectBraintree(mContext, clientToken), new CardBuilder()
                 .cardNumber(VISA)
                 .expirationDate("0819"));
 
