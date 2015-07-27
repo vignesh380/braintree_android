@@ -4,15 +4,14 @@ import android.content.Intent;
 import android.test.AndroidTestCase;
 
 import com.braintreepayments.api.exceptions.ErrorWithResponse;
-import com.braintreepayments.api.threedsecure.ThreeDSecureWebViewActivity;
-import com.braintreepayments.testutils.FixturesHelper;
+
+import static com.braintreepayments.testutils.FixturesHelper.stringFromFixture;
 
 public class ThreeDSecureAuthenticationResponseTest extends AndroidTestCase {
 
     public void testCanInstantiateFromJsonString() {
         ThreeDSecureAuthenticationResponse authResponse = ThreeDSecureAuthenticationResponse.fromJson(
-                FixturesHelper.stringFromFixture(getContext(),
-                        "three_d_secure/authentication_response.json"));
+                stringFromFixture("three_d_secure/authentication_response.json"));
 
         assertEquals("11", authResponse.getCard().getLastTwo());
         assertTrue(authResponse.getCard().getThreeDSecureInfo().isLiabilityShifted());
@@ -30,8 +29,7 @@ public class ThreeDSecureAuthenticationResponseTest extends AndroidTestCase {
 
     public void testCanInstantiateFromJsonErrorString() {
         ThreeDSecureAuthenticationResponse authResponse = ThreeDSecureAuthenticationResponse.fromJson(
-                FixturesHelper.stringFromFixture(getContext(),
-                        "three_d_secure/authentication_response_with_error.json"));
+                stringFromFixture("three_d_secure/authentication_response_with_error.json"));
         ErrorWithResponse errors = new ErrorWithResponse(0, authResponse.getErrors());
 
         assertNull(authResponse.getCard());
@@ -41,8 +39,7 @@ public class ThreeDSecureAuthenticationResponseTest extends AndroidTestCase {
 
     public void testCanBeSerialized() {
         ThreeDSecureAuthenticationResponse authResponse = ThreeDSecureAuthenticationResponse.fromJson(
-                FixturesHelper.stringFromFixture(getContext(),
-                "three_d_secure/authentication_response.json"));
+                stringFromFixture("three_d_secure/authentication_response.json"));
 
         Intent intent = new Intent().putExtra("auth-response", authResponse);
         ThreeDSecureAuthenticationResponse parsedAuthResponse = intent.getParcelableExtra("auth-response");
@@ -65,15 +62,5 @@ public class ThreeDSecureAuthenticationResponseTest extends AndroidTestCase {
 
         assertEquals(authResponse.isSuccess(), parsedAuthResponse.isSuccess());
         assertEquals(authResponse.getException(), parsedAuthResponse.getException());
-    }
-
-    public void testIsThreeDSecureAuthenticationResponseReturnsTrueForThreeDSecureAuthenticationResponses() {
-        Intent intent = new Intent().putExtra(ThreeDSecureWebViewActivity.EXTRA_THREE_D_SECURE_RESULT, "");
-
-        ThreeDSecureAuthenticationResponse.isThreeDSecureAuthenticationResponse(intent);
-    }
-
-    public void testIsThreeDSecureAuthenticationResponseReturnsFalseForNonThreeDSecureAuthenticationResponses() {
-        ThreeDSecureAuthenticationResponse.isThreeDSecureAuthenticationResponse(new Intent());
     }
 }
