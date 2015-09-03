@@ -9,6 +9,7 @@ import android.support.annotation.VisibleForTesting;
 import com.braintreepayments.api.exceptions.ConfigurationException;
 import com.braintreepayments.api.interfaces.ConfigurationListener;
 import com.braintreepayments.api.interfaces.PaymentMethodResponseCallback;
+import com.braintreepayments.api.models.Configuration;
 import com.braintreepayments.api.models.PayPalAccountBuilder;
 import com.braintreepayments.api.models.PaymentMethod;
 import com.paypal.android.sdk.payments.PayPalAuthorization;
@@ -63,16 +64,16 @@ public class PayPal {
 
         fragment.waitForConfiguration(new ConfigurationListener() {
             @Override
-            public void onConfigurationFetched() {
-                com.braintreepayments.api.models.PayPalConfiguration configuration =
-                        fragment.getConfiguration().getPayPal();
+            public void onConfigurationFetched(Configuration configuration) {
+                com.braintreepayments.api.models.PayPalConfiguration payPalConfig =
+                        configuration.getPayPal();
 
-                startPaypalService(fragment.getContext(), configuration);
+                startPaypalService(fragment.getContext(), payPalConfig);
 
                 Class klass;
                 if (PayPalTouch.available(fragment.getContext(), sEnableSignatureVerification) &&
-                        !configuration.getEnvironment().equals(OFFLINE) &&
-                        !configuration.isTouchDisabled()) {
+                        !payPalConfig.getEnvironment().equals(OFFLINE) &&
+                        !payPalConfig.isTouchDisabled()) {
                     klass = PayPalTouchActivity.class;
 
                     fragment.sendAnalyticsEvent("paypal.app-switch.started");
@@ -91,7 +92,7 @@ public class PayPal {
                         .putExtra(PayPalTouchActivity.EXTRA_REQUESTED_SCOPES,
                                 new PayPalOAuthScopes(scopes))
                         .putExtra(PayPalService.EXTRA_PAYPAL_CONFIGURATION,
-                                buildPayPalConfiguration(configuration));
+                                buildPayPalConfiguration(payPalConfig));
 
                 fragment.startActivityForResult(intent, PAYPAL_AUTHORIZATION_REQUEST_CODE);
             }
@@ -105,7 +106,8 @@ public class PayPal {
             fragment.sendAnalyticsEvent("paypal.app-switch.authorized");
 
             PayPalAccountBuilder paypalAccountBuilder = new PayPalAccountBuilder();
-            paypalAccountBuilder.correlationId(PayPalConfiguration.getClientMetadataId(fragment.getContext()));
+            paypalAccountBuilder.correlationId(
+                    PayPalConfiguration.getClientMetadataId(fragment.getContext()));
 
             PayPalTouchConfirmation paypalTouchConfirmation = data.getParcelableExtra(
                     PayPalTouchActivity.EXTRA_LOGIN_CONFIRMATION);
