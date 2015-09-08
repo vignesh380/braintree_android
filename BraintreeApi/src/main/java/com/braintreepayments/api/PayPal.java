@@ -8,10 +8,8 @@ import android.support.annotation.VisibleForTesting;
 
 import com.braintreepayments.api.exceptions.ConfigurationException;
 import com.braintreepayments.api.interfaces.ConfigurationListener;
-import com.braintreepayments.api.interfaces.PaymentMethodResponseCallback;
 import com.braintreepayments.api.models.Configuration;
 import com.braintreepayments.api.models.PayPalAccountBuilder;
-import com.braintreepayments.api.models.PaymentMethod;
 import com.paypal.android.sdk.payments.PayPalAuthorization;
 import com.paypal.android.sdk.payments.PayPalConfiguration;
 import com.paypal.android.sdk.payments.PayPalOAuthScopes;
@@ -133,19 +131,7 @@ public class PayPal {
                         .source("paypal-sdk");
             }
 
-            PaymentMethodTokenization.tokenize(fragment, paypalAccountBuilder,
-                    new PaymentMethodResponseCallback() {
-                        @Override
-                        public void success(PaymentMethod paymentMethod) {
-                            fragment.postCallback(paymentMethod);
-                            fragment.sendAnalyticsEvent("paypal.nonce-received");
-                        }
-
-                        @Override
-                        public void failure(Exception exception) {
-                            fragment.postCallback(exception);
-                        }
-                    });
+            PaymentMethodTokenizer.tokenize(fragment, paypalAccountBuilder);
         } else if (resultCode == Activity.RESULT_CANCELED) {
             // TODO: send analytics event for browser or app-switch cancel
         } else if (resultCode == PayPalProfileSharingActivity.RESULT_EXTRAS_INVALID) {
