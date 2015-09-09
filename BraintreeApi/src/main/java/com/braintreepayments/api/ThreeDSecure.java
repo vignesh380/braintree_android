@@ -9,6 +9,7 @@ import com.braintreepayments.api.interfaces.ConfigurationListener;
 import com.braintreepayments.api.interfaces.HttpResponseCallback;
 import com.braintreepayments.api.interfaces.PaymentMethodResponseCallback;
 import com.braintreepayments.api.models.CardBuilder;
+import com.braintreepayments.api.models.Configuration;
 import com.braintreepayments.api.models.PaymentMethod;
 import com.braintreepayments.api.models.ThreeDSecureAuthenticationResponse;
 import com.braintreepayments.api.models.ThreeDSecureLookup;
@@ -46,8 +47,9 @@ public class ThreeDSecure {
      *                    the 3D Secure verification if performed.
      * @param amount The amount of the transaction in the current merchant account's currency
      */
+    // TODO: should this take an BigDecimal instead of a String?
     public static void performVerification(final BraintreeFragment fragment, final CardBuilder cardBuilder, final String amount) {
-        PaymentMethodTokenization.tokenize(fragment, cardBuilder, new PaymentMethodResponseCallback() {
+        PaymentMethodTokenizer.tokenize(fragment, cardBuilder, new PaymentMethodResponseCallback() {
             @Override
             public void success(PaymentMethod paymentMethod) {
                 performVerification(fragment, paymentMethod.getNonce(), amount);
@@ -88,14 +90,15 @@ public class ThreeDSecure {
             final String amount) {
         fragment.waitForConfiguration(new ConfigurationListener() {
             @Override
-            public void onConfigurationFetched() {
+            public void onConfigurationFetched(Configuration configuration) {
                 try {
                     JSONObject params = new JSONObject()
-                            .put("merchantAccountId", fragment.getConfiguration().getMerchantAccountId())
+                            .put("merchantAccountId", configuration.getMerchantAccountId())
                             .put("amount", amount);
 
-                    fragment.getHttpClient().post(PaymentMethodTokenization.versionedPath(
-                                    PaymentMethodTokenization.PAYMENT_METHOD_ENDPOINT + "/" + nonce + "/three_d_secure/lookup"),
+                    fragment.getHttpClient().post(PaymentMethodTokenizer.versionedPath(
+                                    PaymentMethodTokenizer.PAYMENT_METHOD_ENDPOINT + "/" + nonce +
+                                            "/three_d_secure/lookup"),
                             params.toString(), new HttpResponseCallback() {
                                 @Override
                                 public void success(String responseBody) {

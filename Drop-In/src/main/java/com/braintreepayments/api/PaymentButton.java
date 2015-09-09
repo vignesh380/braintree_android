@@ -12,8 +12,9 @@ import android.widget.RelativeLayout;
 import android.widget.ViewSwitcher;
 
 import com.braintreepayments.api.dropin.R;
-import com.braintreepayments.api.interfaces.ConfigurationErrorListener;
+import com.braintreepayments.api.interfaces.ConfigurationFetchedErrorListener;
 import com.braintreepayments.api.interfaces.ConfigurationListener;
+import com.braintreepayments.api.models.Configuration;
 import com.google.android.gms.wallet.Cart;
 
 import java.util.List;
@@ -25,7 +26,7 @@ import java.util.List;
  * Created {@link com.braintreepayments.api.models.PaymentMethod}s will be posted to
  * {@link com.braintreepayments.api.interfaces.PaymentMethodCreatedListener}.
  */
-public class PaymentButton extends RelativeLayout implements ConfigurationErrorListener,
+public class PaymentButton extends RelativeLayout implements ConfigurationFetchedErrorListener,
         OnClickListener {
 
     private BraintreeFragment mBraintreeFragment;
@@ -109,7 +110,7 @@ public class PaymentButton extends RelativeLayout implements ConfigurationErrorL
         mBraintreeFragment.addListener(this);
         mBraintreeFragment.waitForConfiguration(new ConfigurationListener() {
             @Override
-            public void onConfigurationFetched() {
+            public void onConfigurationFetched(Configuration configuration) {
                 mBraintreeFragment.removeListener(this);
                 setupButton();
                 showProgress(false);

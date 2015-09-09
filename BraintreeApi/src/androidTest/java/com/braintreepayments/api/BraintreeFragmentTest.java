@@ -9,7 +9,7 @@ import android.test.suitebuilder.annotation.SmallTest;
 import com.braintreepayments.api.exceptions.ErrorWithResponse;
 import com.braintreepayments.api.exceptions.InvalidArgumentException;
 import com.braintreepayments.api.interfaces.BraintreeErrorListener;
-import com.braintreepayments.api.interfaces.ConfigurationErrorListener;
+import com.braintreepayments.api.interfaces.ConfigurationFetchedErrorListener;
 import com.braintreepayments.api.interfaces.ConfigurationListener;
 import com.braintreepayments.api.interfaces.HttpResponseCallback;
 import com.braintreepayments.api.interfaces.PaymentMethodCreatedListener;
@@ -41,7 +41,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static android.support.test.InstrumentationRegistry.getInstrumentation;
 import static com.braintreepayments.api.BraintreeFragmentTestUtils.getFragment;
 import static com.braintreepayments.api.BraintreeFragmentTestUtils.getMockFragment;
-import static com.braintreepayments.api.BraintreeFragmentTestUtils.verifyAnalyticsEvent;
 import static com.braintreepayments.testutils.FixturesHelper.stringFromFixture;
 import static com.braintreepayments.testutils.TestClientKey.CLIENT_KEY;
 import static junit.framework.Assert.assertEquals;
@@ -76,7 +75,8 @@ public class BraintreeFragmentTest {
 
     @Test(timeout = 1000)
     @SmallTest
-    public void newInstance_returnsABraintreeFragmentFromAClientKey() throws InvalidArgumentException {
+    public void newInstance_returnsABraintreeFragmentFromAClientKey()
+            throws InvalidArgumentException {
         BraintreeFragment fragment = BraintreeFragment.newInstance(mActivity, CLIENT_KEY);
 
         assertNotNull(fragment);
@@ -84,7 +84,8 @@ public class BraintreeFragmentTest {
 
     @Test(timeout = 1000)
     @SmallTest
-    public void newInstance_returnsABraintreeFragmentFromAClientToken() throws InvalidArgumentException {
+    public void newInstance_returnsABraintreeFragmentFromAClientToken()
+            throws InvalidArgumentException {
         BraintreeFragment fragment = BraintreeFragment.newInstance(mActivity, mClientToken);
 
         assertNotNull(fragment);
@@ -123,30 +124,34 @@ public class BraintreeFragmentTest {
 
     @Test(timeout = 1000)
     @SmallTest
-    public void sendsAnalyticsEventForClientKey() {
-        AnalyticsConfiguration analyticsConfiguration = mock(AnalyticsConfiguration.class);
-        when(analyticsConfiguration.isEnabled()).thenReturn(true);
-        Configuration configuration = mock(Configuration.class);
-        when(configuration.getAnalytics()).thenReturn(analyticsConfiguration);
-        BraintreeFragment fragment = getMockFragment(mActivity, CLIENT_KEY, configuration);
-        BraintreeHttpClient httpClient = mock(BraintreeHttpClient.class);
-        when(fragment.getHttpClient()).thenReturn(httpClient);
-
-        verifyAnalyticsEvent(fragment, "started.client-key");
+    public void sendsAnalyticsEventForClientKey() throws InterruptedException{
+        BraintreeFragment fragment = getFragment(mActivity, CLIENT_KEY);
+        fragment.waitForConfiguration(new ConfigurationListener() {
+            @Override
+            public void onConfigurationFetched(Configuration configuration) {
+                assertEquals(1, AnalyticsManager.sRequestQueue.size());
+                assertEquals("android.custom.started.client-key",
+                        AnalyticsManager.sRequestQueue.get(0).getEvent());
+                mCountDownLatch.countDown();
+            }
+        });
+        mCountDownLatch.await();
     }
 
     @Test(timeout = 1000)
     @SmallTest
-    public void sendsAnalyticsEventForClientToken() {
-        AnalyticsConfiguration analyticsConfiguration = mock(AnalyticsConfiguration.class);
-        when(analyticsConfiguration.isEnabled()).thenReturn(true);
-        Configuration configuration = mock(Configuration.class);
-        when(configuration.getAnalytics()).thenReturn(analyticsConfiguration);
-        BraintreeFragment fragment = getMockFragment(mActivity, configuration);
-        BraintreeHttpClient httpClient = mock(BraintreeHttpClient.class);
-        when(fragment.getHttpClient()).thenReturn(httpClient);
-
-        verifyAnalyticsEvent(fragment, "started.client-token");
+    public void sendsAnalyticsEventForClientToken() throws InterruptedException {
+        BraintreeFragment fragment = getFragment(mActivity, mClientToken);
+        fragment.waitForConfiguration(new ConfigurationListener() {
+            @Override
+            public void onConfigurationFetched(Configuration configuration) {
+                assertEquals(1, AnalyticsManager.sRequestQueue.size());
+                assertEquals("android.custom.started.client-token",
+                        AnalyticsManager.sRequestQueue.get(0).getEvent());
+                mCountDownLatch.countDown();
+            }
+        });
+        mCountDownLatch.await();
     }
 
     @Test(timeout = 10000)
@@ -155,8 +160,8 @@ public class BraintreeFragmentTest {
         final BraintreeFragment fragment = getFragment(mActivity, CLIENT_KEY);
         fragment.waitForConfiguration(new ConfigurationListener() {
             @Override
-            public void onConfigurationFetched() {
-                assertNotNull(fragment.getConfiguration());
+            public void onConfigurationFetched(Configuration configuration) {
+                assertNotNull(configuration);
                 mCountDownLatch.countDown();
             }
         });
@@ -170,8 +175,8 @@ public class BraintreeFragmentTest {
         final BraintreeFragment fragment = getFragment(mActivity, mClientToken);
         fragment.waitForConfiguration(new ConfigurationListener() {
             @Override
-            public void onConfigurationFetched() {
-                assertNotNull(fragment.getConfiguration());
+            public void onConfigurationFetched(Configuration configuration) {
+                assertNotNull(configuration);
                 mCountDownLatch.countDown();
             }
         });
@@ -208,7 +213,7 @@ public class BraintreeFragmentTest {
             throws InvalidArgumentException, InterruptedException {
         BraintreeFragment fragment = BraintreeFragment.newInstance(mActivity,
                 stringFromFixture("client_token_with_bad_config_url.json"));
-        fragment.addListener(new ConfigurationErrorListener() {
+        fragment.addListener(new ConfigurationFetchedErrorListener() {
             @Override
             public void onConfigurationError(Throwable throwable) {
                 assertEquals(
@@ -234,7 +239,7 @@ public class BraintreeFragmentTest {
     public void getClientKey_returnsClientKey() throws InvalidArgumentException {
         BraintreeFragment fragment = getFragment(mActivity, CLIENT_KEY);
 
-        assertEquals(CLIENT_KEY, fragment.getClientKey().getClientKey());
+        assertEquals(CLIENT_KEY, fragment.getClientKey().clientKeyString());
     }
 
     @Test(timeout = 1000)
@@ -244,9 +249,9 @@ public class BraintreeFragmentTest {
         final BraintreeFragment fragment = getFragment(mActivity, mClientToken);
         fragment.waitForConfiguration(new ConfigurationListener() {
             @Override
-            public void onConfigurationFetched() {
+            public void onConfigurationFetched(Configuration configuration) {
                 assertEquals("integration2_merchant_id",
-                        fragment.getConfiguration().getMerchantId());
+                        configuration.getMerchantId());
                 mCountDownLatch.countDown();
             }
         });
@@ -400,8 +405,8 @@ public class BraintreeFragmentTest {
         final BraintreeFragment fragment = getFragment(mActivity, mClientToken);
         fragment.waitForConfiguration(new ConfigurationListener() {
             @Override
-            public void onConfigurationFetched() {
-                assertNotNull(fragment.getConfiguration());
+            public void onConfigurationFetched(Configuration configuration) {
+                assertNotNull(configuration);
                 mCountDownLatch.countDown();
             }
         });
@@ -559,24 +564,25 @@ public class BraintreeFragmentTest {
         Configuration configuration = Configuration.fromJson(clientToken);
         BraintreeFragment fragment = spy(getFragment(mActivity, clientToken));
         when(fragment.getConfiguration()).thenReturn(configuration);
-        BraintreeHttpClient httpClient = new BraintreeHttpClient(ClientToken.fromString(clientToken)) {
-            @Override
-            public void post(String url, final String params,
-                    final HttpResponseCallback callback) {
-                super.post(url, params, new HttpResponseCallback() {
+        BraintreeHttpClient httpClient =
+                new BraintreeHttpClient(ClientToken.fromString(clientToken)) {
                     @Override
-                    public void success(String responseBody) {
-                        assertTrue(params.contains("analytics.event"));
-                        mCountDownLatch.countDown();
-                    }
+                    public void post(String url, final String params,
+                            final HttpResponseCallback callback) {
+                        super.post(url, params, new HttpResponseCallback() {
+                            @Override
+                            public void success(String responseBody) {
+                                assertTrue(params.contains("analytics.event"));
+                                mCountDownLatch.countDown();
+                            }
 
-                    @Override
-                    public void failure(Exception exception) {
-                        fail("Request failure: " + exception.getMessage());
+                            @Override
+                            public void failure(Exception exception) {
+                                fail("Request failure: " + exception.getMessage());
+                            }
+                        });
                     }
-                });
-            }
-        };
+                };
         when(fragment.getHttpClient()).thenReturn(httpClient);
 
         fragment.sendAnalyticsEvent("analytics.event");
@@ -601,7 +607,8 @@ public class BraintreeFragmentTest {
         fragment.onPause();
 
         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        verify(httpClient).post(eq("analytics_url"), captor.capture(), isNull(HttpResponseCallback.class));
+        verify(httpClient)
+                .post(eq("analytics_url"), captor.capture(), isNull(HttpResponseCallback.class));
         assertTrue(new JSONObject(captor.getValue()).getJSONArray("analytics").length() < 5);
     }
 }
