@@ -51,7 +51,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(AndroidJUnit4.class)
-public class PaymentMethodTokenizationTest {
+public class PaymentMethodTokenizerTest {
 
     @Rule
     public final ActivityTestRule<TestActivity> mActivityTestRule =
@@ -77,7 +77,7 @@ public class PaymentMethodTokenizationTest {
             }
         });
 
-        PaymentMethodTokenization.getPaymentMethods(fragment);
+        PaymentMethodTokenizer.getPaymentMethods(fragment);
 
         latch.await();
     }
@@ -106,7 +106,7 @@ public class PaymentMethodTokenizationTest {
             public void onRecoverableError(ErrorWithResponse error) {}
         });
 
-        PaymentMethodTokenization.getPaymentMethods(fragment);
+        PaymentMethodTokenizer.getPaymentMethods(fragment);
 
         latch.await();
     }
@@ -137,7 +137,7 @@ public class PaymentMethodTokenizationTest {
             }
         });
 
-        PaymentMethodTokenization.getPaymentMethods(fragment);
+        PaymentMethodTokenizer.getPaymentMethods(fragment);
 
         latch.await();
     }
@@ -162,7 +162,7 @@ public class PaymentMethodTokenizationTest {
                 .expirationMonth("04")
                 .expirationYear("17"));
 
-        PaymentMethodTokenization.getPaymentMethods(fragment);
+        PaymentMethodTokenizer.getPaymentMethods(fragment);
 
         latch.await();
     }
@@ -195,7 +195,7 @@ public class PaymentMethodTokenizationTest {
                 .expirationMonth("04")
                 .expirationYear("17"));
 
-        PaymentMethodTokenization.getPaymentMethods(fragment);
+        PaymentMethodTokenizer.getPaymentMethods(fragment);
 
         latch.await();
     }
@@ -203,6 +203,8 @@ public class PaymentMethodTokenizationTest {
     @Test(timeout = 10000)
     @MediumTest
     public void tokenize_acceptsAPayPalAccount() throws InterruptedException, JSONException {
+        // TODO: I think we're passing in bad credentials for OTC flow. Probably need to the stub
+
         final CountDownLatch latch = new CountDownLatch(1);
         JSONObject otcJson = new JSONObject(FixturesHelper.stringFromFixture("paypal_otc_response.json"));
         BraintreeFragment fragment = getFragment(mActivity, new TestClientTokenBuilder().withFakePayPal().build());
@@ -211,7 +213,7 @@ public class PaymentMethodTokenizationTest {
                         .oneTouchCoreData(otcJson)
                         .clientMetadataId("client-metadata-id");
 
-        PaymentMethodTokenization.tokenize(fragment, paypalAccountBuilder,
+        PaymentMethodTokenizer.tokenize(fragment, paypalAccountBuilder,
                 new PaymentMethodResponseCallback() {
                     @Override
                     public void success(PaymentMethod paymentMethod) {
@@ -238,7 +240,7 @@ public class PaymentMethodTokenizationTest {
         PayPalAccountBuilder paypalAccountBuilder =
                 new PayPalAccountBuilder().oneTouchCoreData(otcJson);
 
-        PaymentMethodTokenization.tokenize(fragment, paypalAccountBuilder,
+        PaymentMethodTokenizer.tokenize(fragment, paypalAccountBuilder,
                 new PaymentMethodResponseCallback() {
                     @Override
                     public void success(PaymentMethod paymentMethod) {

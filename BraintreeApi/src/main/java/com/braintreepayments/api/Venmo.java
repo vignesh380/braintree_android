@@ -21,8 +21,8 @@ import org.json.JSONException;
 
 import java.util.List;
 
-import static com.braintreepayments.api.PaymentMethodTokenization.PAYMENT_METHOD_ENDPOINT;
-import static com.braintreepayments.api.PaymentMethodTokenization.versionedPath;
+import static com.braintreepayments.api.PaymentMethodTokenizer.PAYMENT_METHOD_ENDPOINT;
+import static com.braintreepayments.api.PaymentMethodTokenizer.versionedPath;
 
 /**
  * Class containing Venmo specific logic.
@@ -85,9 +85,9 @@ public class Venmo {
 
         fragment.waitForConfiguration(new ConfigurationListener() {
             @Override
-            public void onConfigurationFetched() {
-                if (isAvailable(fragment.getContext(), fragment.getConfiguration())) {
-                    fragment.startActivityForResult(Venmo.getLaunchIntent(fragment.getConfiguration()),
+            public void onConfigurationFetched(Configuration configuration) {
+                if (isAvailable(fragment.getContext(), configuration)) {
+                    fragment.startActivityForResult(Venmo.getLaunchIntent(configuration),
                             VENMO_REQUEST_CODE);
                     fragment.sendAnalyticsEvent("venmo.app-switch.started");
                 } else {
