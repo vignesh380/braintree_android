@@ -48,7 +48,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @RunWith(AndroidJUnit4.class)
-public class PaymentMethodTokenizerTest {
+public class TokenizationClientTest {
 
     @Rule
     public final ActivityTestRule<TestActivity> mActivityTestRule =
@@ -74,7 +74,7 @@ public class PaymentMethodTokenizerTest {
             }
         });
 
-        PaymentMethodTokenizer.getPaymentMethods(fragment);
+        TokenizationClient.getPaymentMethods(fragment);
 
         latch.await();
     }
@@ -103,7 +103,7 @@ public class PaymentMethodTokenizerTest {
             public void onRecoverableError(ErrorWithResponse error) {}
         });
 
-        PaymentMethodTokenizer.getPaymentMethods(fragment);
+        TokenizationClient.getPaymentMethods(fragment);
 
         latch.await();
     }
@@ -134,7 +134,7 @@ public class PaymentMethodTokenizerTest {
             }
         });
 
-        PaymentMethodTokenizer.getPaymentMethods(fragment);
+        TokenizationClient.getPaymentMethods(fragment);
 
         latch.await();
     }
@@ -159,7 +159,7 @@ public class PaymentMethodTokenizerTest {
                 .expirationMonth("04")
                 .expirationYear("17"));
 
-        PaymentMethodTokenizer.getPaymentMethods(fragment);
+        TokenizationClient.getPaymentMethods(fragment);
 
         latch.await();
     }
@@ -192,7 +192,7 @@ public class PaymentMethodTokenizerTest {
                 .expirationMonth("04")
                 .expirationYear("17"));
 
-        PaymentMethodTokenizer.getPaymentMethods(fragment);
+        TokenizationClient.getPaymentMethods(fragment);
 
         latch.await();
     }
@@ -205,7 +205,7 @@ public class PaymentMethodTokenizerTest {
         PayPalAccountBuilder paypalAccountBuilder =
                 new PayPalAccountBuilder().consentCode("test-authorization-code");
 
-        PaymentMethodTokenizer.tokenize(fragment, paypalAccountBuilder,
+        TokenizationClient.tokenize(fragment, paypalAccountBuilder,
                 new PaymentMethodResponseCallback() {
                     @Override
                     public void success(PaymentMethod paymentMethod) {
@@ -231,7 +231,7 @@ public class PaymentMethodTokenizerTest {
         PayPalAccountBuilder paypalAccountBuilder =
                 new PayPalAccountBuilder().consentCode("test-authorization-code");
 
-        PaymentMethodTokenizer.tokenize(fragment, paypalAccountBuilder,
+        TokenizationClient.tokenize(fragment, paypalAccountBuilder,
                 new PaymentMethodResponseCallback() {
                     @Override
                     public void success(PaymentMethod paymentMethod) {

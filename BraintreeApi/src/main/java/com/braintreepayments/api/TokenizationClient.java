@@ -14,7 +14,7 @@ import org.json.JSONException;
 
 import java.util.List;
 
-public class PaymentMethodTokenizer {
+public class TokenizationClient {
 
     static final String PAYMENT_METHOD_ENDPOINT = "payment_methods";
 
@@ -74,8 +74,8 @@ public class PaymentMethodTokenizer {
         fragment.waitForConfiguration(new ConfigurationListener() {
             @Override
             public void onConfigurationFetched(Configuration configuration) {
-                fragment.getHttpClient().post(PaymentMethodTokenizer.versionedPath(
-                                PaymentMethodTokenizer.PAYMENT_METHOD_ENDPOINT + "/" +
+                fragment.getHttpClient().post(TokenizationClient.versionedPath(
+                                TokenizationClient.PAYMENT_METHOD_ENDPOINT + "/" +
                                         paymentMethodBuilder.getApiPath()),
                         paymentMethodBuilder.build(), new HttpResponseCallback() {
                             @Override
@@ -115,7 +115,7 @@ public class PaymentMethodTokenizer {
      * @param paymentMethodBuilder {@link PaymentMethodBuilder}
      */
     public static void tokenize(final BraintreeFragment fragment, final PaymentMethodBuilder paymentMethodBuilder) {
-        PaymentMethodTokenizer.tokenize(fragment, paymentMethodBuilder,
+        TokenizationClient.tokenize(fragment, paymentMethodBuilder,
                 new PaymentMethodResponseCallback() {
                     @Override
                     public void success(PaymentMethod paymentMethod) {

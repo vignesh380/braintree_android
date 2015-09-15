@@ -131,7 +131,7 @@ public class PayPal {
                         .source("paypal-sdk");
             }
 
-            PaymentMethodTokenizer.tokenize(fragment, paypalAccountBuilder);
+            TokenizationClient.tokenize(fragment, paypalAccountBuilder);
         } else if (resultCode == Activity.RESULT_CANCELED) {
             // TODO: send analytics event for browser or app-switch cancel
         } else if (resultCode == PayPalProfileSharingActivity.RESULT_EXTRAS_INVALID) {
