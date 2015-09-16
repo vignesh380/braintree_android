@@ -200,7 +200,7 @@ public class TokenizationClientTest {
         latch.await();
     }
 
-    @Test//(timeout = 10000)
+    @Test(timeout = 10000)
     @MediumTest
     public void tokenize_acceptsAPayPalAccount() throws InterruptedException, JSONException {
         final CountDownLatch latch = new CountDownLatch(1);
@@ -208,8 +208,7 @@ public class TokenizationClientTest {
         BraintreeFragment fragment = getFragment(mActivity, new TestClientTokenBuilder().withFakePayPal().build());
         PayPalAccountBuilder paypalAccountBuilder =
                 new PayPalAccountBuilder()
-                        .oneTouchCoreData(otcJson)
-                        .clientMetadataId("client-metadata-id");
+                        .oneTouchCoreData(otcJson);
 
         TokenizationClient.tokenize(fragment, paypalAccountBuilder,
                 new PaymentMethodResponseCallback() {
@@ -222,7 +221,7 @@ public class TokenizationClientTest {
 
                     @Override
                     public void failure(Exception exception) {
-                        fail(exception.getMessage());
+                        assertTrue(exception.getMessage(), false);
                     }
                 });
 
