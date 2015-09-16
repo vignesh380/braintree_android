@@ -200,7 +200,7 @@ public class TokenizationClientTest {
         latch.await();
     }
 
-    @Test(timeout = 10000)
+    @Test//(timeout = 10000)
     @MediumTest
     public void tokenize_acceptsAPayPalAccount() throws InterruptedException, JSONException {
         final CountDownLatch latch = new CountDownLatch(1);

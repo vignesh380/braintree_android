@@ -11,9 +11,9 @@ import android.util.Log;
 import com.braintreepayments.api.exceptions.BraintreeException;
 import com.braintreepayments.api.exceptions.ConfigurationException;
 import com.braintreepayments.api.exceptions.ErrorWithResponse;
+import com.braintreepayments.api.interfaces.ConfigurationListener;
 import com.braintreepayments.api.interfaces.HttpResponseCallback;
 import com.braintreepayments.api.interfaces.PaymentMethodResponseCallback;
-import com.braintreepayments.api.interfaces.ConfigurationListener;
 import com.braintreepayments.api.models.Configuration;
 import com.braintreepayments.api.models.PayPalAccountBuilder;
 import com.braintreepayments.api.models.PayPalCheckout;
@@ -31,14 +31,6 @@ import com.paypal.android.sdk.onetouch.core.Request;
 import com.paypal.android.sdk.onetouch.core.RequestTarget;
 import com.paypal.android.sdk.onetouch.core.Result;
 import com.paypal.android.sdk.onetouch.core.ResultType;
-import com.paypal.android.sdk.payments.PayPalAuthorization;
-import com.paypal.android.sdk.payments.PayPalConfiguration;
-import com.paypal.android.sdk.payments.PayPalOAuthScopes;
-import com.paypal.android.sdk.payments.PayPalProfileSharingActivity;
-import com.paypal.android.sdk.payments.PayPalService;
-import com.paypal.android.sdk.payments.PayPalTouch;
-import com.paypal.android.sdk.payments.PayPalTouchActivity;
-import com.paypal.android.sdk.payments.PayPalTouchConfirmation;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -122,7 +114,7 @@ public class PayPal {
                 }
 
                 sBraintreeFragmentBroadcastReceiver.setFragment(fragment);
-                BraintreeBroadcastManager.getInstance(fragment.getContext())
+                BraintreeBroadcastManager.getInstance(fragment.getApplicationContext())
                         .registerReceiver(sBraintreeFragmentBroadcastReceiver, new IntentFilter(
                                 BraintreeBrowserSwitchActivity.LOCAL_BROADCAST_BROWSER_SWITCH_COMPLETED));
 
@@ -161,6 +153,33 @@ public class PayPal {
                 }
             }
         });
+    }
+
+    /**
+     * Starts the Billing Agreement flow for PayPal. This will launch the PayPal app if installed or
+     * fall back to a browser switch.
+     *
+     * @param fragment A {@link BraintreeFragment} used to process the request.
+     * @param checkout A {@link PayPalCheckout} used to customize the request.
+     */
+    public static void billingAgreement(BraintreeFragment fragment, PayPalCheckout checkout) {
+        PayPal.checkout(fragment, checkout, true);
+    }
+
+    /**
+     * Starts the Single Payment flow for PayPal. This will launch the PayPal app if installed or
+     * fall back to a browser switch.
+     *
+     * @param fragment A {@link BraintreeFragment} used to process the request.
+     * @param checkout A {@link PayPalCheckout} used to customize the request. An amount MUST be
+     * specified.
+     */
+    public static void checkout(BraintreeFragment fragment, PayPalCheckout checkout) {
+        if (checkout.getAmount() == null) {
+            fragment.postCallback(new BraintreeException("An amount MUST be specified for the Single Payment flow."));
+        }
+        PayPal.checkout(fragment, checkout, false);
+    }
 
     /**
      * Starts the Checkout With PayPal flow. This will launch the PayPal app if installed or switch
@@ -174,7 +193,7 @@ public class PayPal {
     private static void checkout(final BraintreeFragment fragment, final PayPalCheckout checkout,
             final boolean isBillingAgreement) {
         sBraintreeFragmentBroadcastReceiver.setFragment(fragment);
-        BraintreeBroadcastManager.getInstance(fragment.getContext())
+        BraintreeBroadcastManager.getInstance(fragment.getApplicationContext())
                 .registerReceiver(sBraintreeFragmentBroadcastReceiver, new IntentFilter(
                         BraintreeBrowserSwitchActivity.LOCAL_BROADCAST_BROWSER_SWITCH_COMPLETED));
 
@@ -262,7 +281,7 @@ public class PayPal {
             throws JSONException, ErrorWithResponse, BraintreeException {
         Configuration configuration = fragment.getConfiguration();
         CheckoutRequest request =
-                PayPal.buildPayPalCheckoutConfiguration(null, fragment.getContext(), configuration);
+                PayPal.buildPayPalCheckoutConfiguration(null, fragment.getApplicationContext(), configuration);
 
         String currencyCode = checkout.getCurrencyCode();
         if (currencyCode == null) {
@@ -348,9 +367,9 @@ public class PayPal {
                     sendAnalyticsEventForSwitchResult(fragment, isCheckout, isAppSwitch,
                             "succeeded");
                     PayPalAccountBuilder paypalAccountBuilder =
-                            getBuilderFromResponse(fragment.getContext(), resultCode, data);
+                            getBuilderFromResponse(fragment.getApplicationContext(), resultCode, data);
                     if (paypalAccountBuilder != null) {
-                        PaymentMethodTokenization.tokenize(fragment, paypalAccountBuilder,
+                        TokenizationClient.tokenize(fragment, paypalAccountBuilder,
                                 new PaymentMethodResponseCallback() {
                                     @Override
                                     public void success(PaymentMethod paymentMethod) {
