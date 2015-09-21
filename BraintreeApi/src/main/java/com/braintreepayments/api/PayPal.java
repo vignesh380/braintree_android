@@ -153,6 +153,7 @@ public class PayPal {
                     sendAnalyticsForPayPalPerformRequestStatus(fragment, sPendingRequestStatus,
                             false);
                 } catch (BraintreeException ignored) {
+                    ignored.toString();
                 }
             }
         });
