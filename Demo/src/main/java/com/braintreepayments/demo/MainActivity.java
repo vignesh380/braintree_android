@@ -302,6 +302,8 @@ public class MainActivity extends Activity implements PaymentMethodCreatedListen
     }
 
     private void enableButtons(boolean enable) {
+        mDropInButton.setVisibility(View.INVISIBLE);
+        mCustomButton.setVisibility(View.INVISIBLE);
         mDropInButton.setEnabled(enable);
         mPaymentButtonButton.setEnabled(enable);
         mCustomButton.setEnabled(enable);

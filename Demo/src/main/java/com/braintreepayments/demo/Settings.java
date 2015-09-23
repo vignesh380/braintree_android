@@ -9,7 +9,9 @@ public class Settings {
 
     protected static final String ENVIRONMENT = "environment";
 
-    private static final String SANDBOX_BASE_SERVER_URL = "https://braintree-sample-merchant.herokuapp.com";
+    private static final String SANDBOX_BASE_SERVER_URL = "https://braintree-demo.herokuapp.com";
+    //private static final String SANDBOX_BASE_SERVER_URL = "localhost:5000";
+
     private static final String PRODUCTION_BASE_SERVER_URL = "https://executive-sample-merchant.herokuapp.com";
 
     public static SharedPreferences getPreferences(Context context) {
